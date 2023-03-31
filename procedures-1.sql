@@ -90,13 +90,31 @@ end //
 delimiter ;
 call precioTotal();
 
+-- 8)
 
-
-drop procedure ;
+drop procedure numeroCliente;
 delimiter //
-create procedure ()
+create procedure numeroCliente()
 begin
-
+	select customers.customerNumber, customerName,orders.orderNumber,sum(quantityOrdered*priceEach) as total 
+    from customers join orders on customers.customerNumber=orders.customerNumber 
+    join orderdetails on orderdetails.orderNumber=orders.orderNumber group by orders.orderNumber;
 end //
 delimiter ;
-call ();
+call numeroCliente();
+
+-- 9)
+
+drop procedure modificarComments;
+delimiter //
+create procedure modificarComments(in numeroOrden int, in comentario text, out retorno bool)
+begin
+	set retorno=0;
+		if exists (select * from orders where numeroOrden=orderNumber) then
+			update orders set comments = comentario where orderNumber = numeroOrden;
+			set retorno=1;
+    end if;
+end //
+delimiter ;
+call modificarComments(10100,"hola",@retorno);
+select @retorno;
