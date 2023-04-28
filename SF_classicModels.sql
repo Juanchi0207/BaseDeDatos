@@ -201,6 +201,9 @@ begin
     select max(priceEach) into precio from orderdetails 
     join orders on orderdetails.orderNumber=orders.orderNumber
     where orders.orderDate>fechaDesde and orders.orderDate<fechaHasta and orderdetails.productCode=codProducto;
+    if precio is null then
+		set precio=0;
+	end if;
     return precio;
 end //
 delimiter ; 
