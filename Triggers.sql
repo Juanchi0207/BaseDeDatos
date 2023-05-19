@@ -79,3 +79,22 @@ begin
 end //
 delimiter ;
     
+-- 3)
+
+delimiter //
+drop trigger trigger3;
+create trigger trigger3 before delete on products
+for each row
+begin
+	if exists (select productCode from orderdetails 
+    join orders on orderdetails.orderNumber=orders.orderNumber 
+    where (month("2003-01-21")-month(orderDate))<=2 and year("2003-01-01")=year(orderDate) -- En el year deberia de haber un now(), pero no funciona pq no hay ordenes despues del 2003
+    and productCode=old.productCode)
+    then
+    signal sqlstate "45001" set message_text="el proucto esta en una orden reciente";
+    end if;
+end //
+delimiter ;
+
+select * from orders join orderdetails on orderdetails.orderNumber=orders.orderNumber;
+delete from products where productCode="S24_3969";
