@@ -1,5 +1,36 @@
 drop database tpIntegrador;
 create database tpIntegrador;
+
+/* drop procedure ;
+delimiter //
+create procedure ()
+begin
+
+end//
+delimiter ;
+*/
+
+/*
+drop function ;
+delimiter //
+create function () returns not deterministic 
+begin 
+	
+end //
+delimiter ;
+*/
+
+/*
+drop trigger ;
+delimiter //
+create trigger after/before insert/update/delete 
+on tabla for each row
+begin 
+
+end //
+delimiter ;
+*/
+
 INSERT INTO categorias (categoria) VALUES
 ('Electrónica'),
 ('Ropa y Accesorios'),
@@ -61,17 +92,8 @@ INSERT INTO metodoEnvio (tipoMetodoEnvio) VALUES
 ('OCA'),
 ('Correo Argentino');
 
+-- Ejercicio 1 - Stored Procedures
 
-/* drop procedure buscarPublicacion;
-delimiter //
-create procedure buscarPublicacion ()
-begin
-
-end//
-delimiter ;
-*/
-
--- Ejercicio 1 - Procedures
 drop procedure buscarPublicacion;
 delimiter //
 create procedure buscarPublicacion (in nombreProd varchar(45))
@@ -83,7 +105,8 @@ delimiter ;
 
 call buscarPublicacion ('Smartphone');
 
--- Ejercicio 2 - Procedures
+-- Ejercicio 2 - Stored Procedures
+
 drop procedure crearPublicacion;
 delimiter //
 create procedure crearPublicacion (in publicacionId int, in publicacionPrecio decimal, in tipoPublicacion varchar(45), in categoriaPublicacion varchar(45), in fechaFinPublicacion date, in usuarioDNIPublicacion int, in productoIdPublicacion int, in estadoPublicacion varchar(45))
@@ -92,36 +115,39 @@ begin
 end//
 delimiter ;
 
--- Ejercicio 3 - Procedures
+-- Ejercicio 3 - Stored Procedures
+
 drop procedure verPreguntas;
 delimiter //
 create procedure verPreguntas (in codPublicacion Int)
-begin
-	
-    select pregunta from pYa where codPublicacion = publicacion_idpublicacion;
-    
+begin	
+    select pregunta from qYa where codPublicacion = publicacion_idpublicacion;
 end//
 delimiter ;
 
-
+call verPreguntas(1);
 SET GLOBAL log_bin_trust_function_creators = 1;
+
 -- Ejercicio 1 - Stored Functions
+
 drop function comprarProducto;
 delimiter //
 create function comprarProducto (usuarioComprador INT, codPublicacion INT, metodoPago Varchar(45), tipoEnvio Varchar(45))
-returns Varchar(45) not deterministic 
+returns Varchar(45) deterministic 
 begin 
 	
     declare mensaje Varchar(45) default "no está activo";
 	declare estadoActual Varchar(45) default "";
     declare tipoVenta varchar(45) default "";
+    declare vendedor int default 0;
     
+    select usuario_dni into vendedor from publicacion where idpublicacion=codPublicacion;
     select estado into estadoActual from publicacion where idpublicacion = codPublicacion;
 	if estadoActual = "Activa" then
 		select tipo into tipoVenta from publicacion where idpublicacion = codPublicacion;
         if tipoVenta = "Venta directa" then
-			update 
 			insert into compra values (null, codPublicacion, usuarioComprador, tipoEnvio, metodoPago, now(), null, null);
+			call cerrarPublicacion(codPublicacion, vendedor);
         else
 			set mensaje = "es una subasta";
 		end if;
@@ -131,23 +157,205 @@ begin
 end //
 delimiter ;
 
+-- Ejercicio 2 - Stored Functions
 
 drop function cerrarPublicacion;
 delimiter //
 create function cerrarPublicacion (idPubli int,codUsuario int)
-returns Varchar(45) not deterministic 
+returns Varchar(45) deterministic 
 begin 
 	declare confirmacion boolean default false;
 	declare publi int default 0;
     declare dni int default 0;
     declare califVen int default 0;
     declare califComp int default 0;
-    select usuario_dni, idpublicacion, califVendedor, califComprador into publi, dni, califVen, califComp from publicacion 
-    where idpublicacion=idPubli and usuario_dni=codUsuario;
-    if publi=idPubli and dni=codUsuario and califVen!=null and califComp!=null then
+    select publicacion.usuario_dni, idpublicacion, califVendedor, califComprador into dni, publi, califVen, califComp from publicacion 
+    join compra on publicacion_idpublicacion=idpublicacion
+    where idpublicacion=idPubli and publicacion.usuario_dni=codUsuario;
+    if publi=idPubli and dni=codUsuario and califVen is not null and califComp is not null then
 		update publicacion set estado="vendido" where idpublicacion=idPubli;
         set confirmacion=true;
 	end if;
     return confirmacion;
 end //
 delimiter ;
+
+select cerrarPublicacion(2,87654321);
+
+
+-- Ejercicio 3 - Stored Functions
+
+drop function eliminarProducto;
+delimiter //
+create function eliminarProducto(idProd int) returns varchar(60) deterministic 
+begin
+	declare mensaje varchar(60) default "Esta asociado a una publicacion";
+    declare publi int default null;
+    select idpublicacion into publi from publicacion where producto_idproducto=idProd;
+    if publi is null then
+		delete from producto where idproducto=idProd;
+        set mensaje="No esta asociado a ninguna publicacion y fue eliminado";
+    end if;
+    return mensaje;
+end //
+delimiter ;
+
+-- Ejercicio 4 - Stored functions
+
+drop function pausarPublicacion;
+delimiter //
+create function pausarPublicacion(codPublicacion int) returns varchar(45) deterministic 
+begin 
+	declare mensaje varchar(45) default "No existe la publicacion";
+    declare publi int default null;
+    select idpublicacion into publi from publicacion where idpublicacion=codPublicacion;
+    if publi is not null then
+		update publicacion set estado="Pausada" where idpublicacion=codPublicacion;
+        set mensaje="La publicacion fue pausada";
+    end if;
+    return mensaje;
+end //
+delimiter ;
+
+-- Ejercicio 5 - Stored Functions
+
+drop function pujarProducto;
+delimiter //
+create function pujarProducto(codPublicacion int, precio decimal, codUsuario int) returns varchar(100) deterministic 
+begin 
+	declare pujaActual decimal default 0;
+    declare mensaje varchar(100) default "La publicacion no esta activa o no es subasta";
+    declare estadoActual varchar(45) default "";
+    declare tipoPubli varchar(45) default "";
+    select monto into pujaActual from oferta where publicacion_idpublicacion=codPublicacion;
+    select estado into estadoActual from publicacion where idpublicacion=codPublicacion;
+    select tipo into tipoPubli from publicacion where idpublicacion=codPublicacion;
+    if tipoPubli="Subasta" and estadoActual="Activo" then
+		set mensaje="El monto no pasa al anterior";
+		if precio>pujaActual then
+			update oferta set monto=precio, usuario_dni=codUsuario where publicacion_idpublicacion=codPublicacion;
+            set mensaje="Oferta realizada con exito";
+        end if;
+    end if;
+    return mensaje;
+end //
+delimiter ;
+
+-- Ejercicio 6 - Stored Functions
+
+drop function eliminarCategoria;
+delimiter //
+create function eliminarCategoria(nombreCat varchar(45)) returns varchar(45) deterministic 
+begin 
+	declare idPubli int default null;
+    declare mensaje varchar(45) default "No se pudo eliminar";
+	select idPublicacion into idPubli from publicacion where nombreCat=categorias_categoria;
+    if idPubli is null then
+		delete from categorias where nombreCat=categoria;
+        set mensaje ="Categoria eliminada";
+    end if;
+    return mensaje;
+end //
+delimiter ;
+
+
+-- Ejercicio 7- stored functions
+
+drop function puntuarComprador;
+delimiter //
+create function puntuarComprador(codVendedor int, codCompra int, calif int) returns varchar(45) deterministic 
+begin 
+	declare mensaje Varchar(45) default "Error al actualizar la calificacion";
+    declare publi int default null;
+    declare vendedor int default 0;
+    declare comprador int default 0;
+    declare reputacionFinal decimal default 0;
+    select idpublicacion, publicacion.usuario_dni into publi, vendedor from publicacion join compra on publicacion_idpublicacion=idpublicacion
+    where idcompra=codCompra;
+    if publi is not null and vendedor=codVendedor then
+		update compra set califComprador=calif where idcompra=codCompra;
+        select usuario_dni into comprador from compra where idcompra=codCompra;
+        select avg(califComprador) into reputacionFinal from compra where usuario_dni=comprador;
+        update usuario set reputacion=reputacionFinal where dni=comprador;
+        set mensaje="Calificacion actualizada";
+    end if;
+    return mensaje;
+end //
+delimiter ;
+
+
+select usuario_dni from compra where idcompra=1;
+  select avg(califComprador) from compra where usuario_dni=12345678;
+select puntuarComprador(87654321,3,100);
+select * from usuario where dni=87654321;
+select avg(califComprador) from compra where usuario_dni=87654321;
+
+-- Ejercicio 8 - Stored Functions
+
+drop function responderPregunta;
+delimiter //
+create function responderPregunta(idVendedor int, preg varchar(100), resp varchar(100)) returns varchar(45) deterministic 
+begin 
+	declare mensaje varchar(45) default "Solo el vendedor puede responder";
+    declare vendedor int default null; 
+    declare idPubli int default null;
+    select usuario_dni, idpublicacion into vendedor, idPubli from publicacion join qYa on publicacion_idpublicacion=idpublicacion
+    where pregunta=preg;
+    if vendedor=idVendedor then
+		update qYa set respuesta=resp where idPubli=publicacion_idpublicacion and preg=pregunta;
+        set mensaje="Ok";
+    end if;
+    return mensaje;
+end //
+delimiter ;
+
+-- Ejercicio 1 - Triggers
+
+drop trigger borrarPreguntas;
+delimiter //
+create trigger borrarPreguntas before delete 
+on publicacion for each row
+begin 
+	delete from qYa where publicacion_idpublicacion = old.idpublicacion;
+end //
+delimiter ;
+
+select * from qYa;
+delete from publicacion where idpublicacion=2;
+
+-- Ejercicio 2 - Triggers
+
+drop trigger Calificar;
+delimiter //
+create trigger Calificar after update
+on compra for each row
+begin 
+if new.califComprador is not null and new.califVendedor is not null then 
+	update usuario set reputacion = (select avg(califComprador+calComprador) from compra
+    where dni=new.usuario_dni) where usuario_dni=new.usuario_dni;
+    update usuario set reputacion = (select avg(califVendedor+calVendedor) from publicacion join compra on idpublicacion=publicacion_idPublicacion
+    where dni=new.usuario_dni) where usuario_dni=new.usuario_dni;
+end if;
+	
+end //
+delimiter ;
+
+-- Ejercicio 3 - Triggers
+drop trigger cambiarCategorias;
+delimiter //
+create trigger cambiarCategorias after insert 
+on compra for each row
+begin
+	declare cantidadVentas int default 0;
+    select count(*) into cantidadVentas from compra where usuario_dni = new.usuario_dni;
+    if cantidad < 6 then
+		update usuario set nivel = "NORMAL" where usuario_dni = new.usuario_dni;
+	else if cantidad < 10 then
+		update usuario set nivel = "GOLD" where usuario_dni = new.usuario_dni;
+	else 
+		update usuario set nivel = "PLATINUM" where usuario_dni = new.usuario_dni;
+	end if;
+    end if;
+end //
+delimiter ;
+
