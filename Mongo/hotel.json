@@ -1,0 +1,26 @@
+{
+    "direccion": "bolivia 5555",
+    "telefono": 1155555666,
+    "sectores" : [
+        { "nroRecepcion" : 78}, {"nroSpa" : 88}, {"nroPiscina" : 122}
+    ],
+    "servicios" : [
+        {"convenciones":true}, {"petFriendly" : true}, {"cajaFuerte" : false}, 
+        {"wi-fi" : true}
+    ],
+    "comodidades" : [
+        {"restaurante" : true}, {"spa" : true}, {"piscina" : true}
+    ],
+    "promociones" : {
+        "nombre": "jubilados", "%descuento":10 
+    },
+    "puntosInteres": [
+        {"parque": {"nombre": "Libertador", "direccion": "bolivia 3333", "telefono":1174928911, "sitioWeb":"www.pqueLibertador.gob.ar"}}, 
+        {"teatro": {"nombre": "Colon", "direccion": "triunvirato 345", "telefono":11111111112, "sitioWeb":"www.teatroColon.com.ar"}},
+        {"museo": {"nombre": "Historico", "direccion":"bolivia 1234", "telefono":1122222234, "sitioWeb":"www.museoHistoricoLaPlata.com.ar"}}
+    ],
+    "numerosUtiles": [
+        {"policia":911}, {"ambulancia" : 107}, {"aeroparque" : 104}, 
+        {"FBI" : 951}
+    ]
+}

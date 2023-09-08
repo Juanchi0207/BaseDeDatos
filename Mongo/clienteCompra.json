@@ -1,0 +1,44 @@
+{
+    "dni":1,
+    "nombre":"Juan",
+    "apellido":"Mateo Monteserrin",
+    "edad":20,
+    "compras":[
+        {
+            "id": 1, 
+            "fecha":"2023-07-02",
+            "productos":[
+                {
+                    "id":1,
+                    "descripcion":"Leche",
+                    "precioUnitario":510,
+                    "cantidad":10
+                },
+                {
+                    "id":2,
+                    "descripcion":"Zapallo",
+                    "precioUnitario":300,
+                    "cantidad":5
+                }
+            ]
+        },
+        {
+            "id": 2, 
+            "fecha":"2023-02-07",
+            "productos":[
+                {
+                    "id":1,
+                    "descripcion":"Leche",
+                    "precioUnitario":510,
+                    "cantidad":10
+                },
+                {
+                    "id":3,
+                    "descripcion":"Mochila Escolar",
+                    "precioUnitario":6000,
+                    "cantidad":1
+                }
+            ]
+        }
+    ]
+}
