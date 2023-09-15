@@ -1,0 +1,19 @@
+{
+    "id": 1,
+    "fecha": "2023-07-02",
+    "productos": [
+        {
+            "id": 1,
+            "descripcion": "Leche",
+            "precioUnitario": 510,
+            "cantidad": 10
+        },
+        {
+            "id": 2,
+            "descripcion": "Zapallo",
+            "precioUnitario": 300,
+            "cantidad": 5
+        }
+    ],
+    "cliente_dni": 1
+}

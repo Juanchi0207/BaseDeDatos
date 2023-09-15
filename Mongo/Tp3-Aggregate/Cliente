@@ -1,0 +1,25 @@
+[{
+  "_id": {
+    "$oid": "65048f28cadd18ce03d06318"
+  },
+  "dni": 1,
+  "nombre": "Juan Mateo",
+  "apellido": "Monteserrin",
+  "edad": 20
+},{
+  "_id": {
+    "$oid": "65048f3bcadd18ce03d0631c"
+  },
+  "dni": 2,
+  "nombre": "Mateo Juan",
+  "apellido": "Serrinmonte",
+  "edad": 2
+},{
+  "_id": {
+    "$oid": "65048f49cadd18ce03d06320"
+  },
+  "dni": 3,
+  "nombre": "Juan Mateo Juan",
+  "apellido": "Monteserrinmonte",
+  "edad": 40
+}]
